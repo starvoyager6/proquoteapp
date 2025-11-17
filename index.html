@@ -1,1 +1,179 @@
-<h1>placeholder</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quotes</title>
+  <style>
+    :root {
+      --bg: #0f172a;        /* slate-900 */
+      --panel: #111827;     /* gray-900 */
+      --text: #e5e7eb;      /* gray-200 */
+      --muted: #9ca3af;     /* gray-400 */
+      --accent: #6366f1;    /* indigo-500 */
+      --accent-2: #8b5cf6;  /* violet-500 */
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: radial-gradient(1200px 800px at 20% 10%, #1f2937 0%, #0f172a 60%, #0b1220 100%);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    /* Center everything and keep it responsive */
+    .app {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4vh 4vw;
+    }
+
+    .card {
+      width: 75vw;              /* 75% of viewport width as requested */
+      max-width: 960px;
+      background: color-mix(in oklab, var(--panel) 88%, black);
+      border: 1px solid color-mix(in oklab, var(--panel) 70%, #334155);
+      border-radius: 18px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(6px);
+      padding: clamp(16px, 4vw, 36px);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center; /* center the controls */
+      gap: 14px;
+      margin-bottom: clamp(18px, 3vw, 28px);
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      font-size: clamp(18px, 4vw, 28px);
+      margin: 0;
+      letter-spacing: 0.2px;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;  /* center the controls */
+      gap: 12px;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    button {
+      appearance: none;
+      border: none;
+      cursor: pointer;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: clamp(14px, 2.6vw, 16px);
+      font-weight: 600;
+      color: white;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 10px 30px rgba(99, 102, 241, 0.35);
+      transition: transform 160ms ease, filter 160ms ease, box-shadow 160ms ease;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+      box-shadow: 0 12px 36px rgba(139, 92, 246, 0.4);
+    }
+    button:active {
+      transform: translateY(0);
+      filter: brightness(0.98);
+    }
+    button[disabled] {
+      opacity: 0.7;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .quote {
+      width: 100%;
+      margin-top: clamp(12px, 2.5vw, 20px);
+      padding: clamp(16px, 3vw, 22px);
+      border-radius: 12px;
+      background: color-mix(in oklab, #0b1220 88%, var(--panel));
+      border: 1px dashed color-mix(in oklab, #334155 60%, #1f2937);
+      line-height: 1.6;
+      font-size: clamp(16px, 3.2vw, 20px);
+      color: var(--text);
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: clamp(12px, 2.4vw, 14px);
+      margin-top: 8px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="card" role="region" aria-label="Quote generator">
+      <div class="header">
+        <h1>Instant Inspiration</h1>
+      </div>
+
+      <div class="actions">
+        <button id="fetchBtn" type="button" aria-label="Get a new quote">Get a quote</button>
+      </div>
+
+      <blockquote id="quote" class="quote" cite="https://quote.cs260.click">
+        Tap “Get a quote” to fetch something uplifting.
+      </blockquote>
+
+      <p id="status" class="muted" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script>
+    const btn = document.getElementById('fetchBtn');
+    const quoteEl = document.getElementById('quote');
+    const statusEl = document.getElementById('status');
+
+    async function fetchQuote() {
+      btn.disabled = true;
+      statusEl.textContent = "Fetching…";
+      try {
+        const res = await fetch('https://quote.cs260.click', { cache: 'no-store' });
+        // Try text first, then JSON fallback
+        let text;
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const data = await res.json();
+          text = data.quote || JSON.stringify(data);
+        } else {
+          text = await res.text();
+        }
+
+        if (!res.ok) throw new Error(`Error ${res.status}: ${text}`);
+        quoteEl.textContent = text.trim();
+        statusEl.textContent = "";
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = "Unable to fetch a quote right now.";
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    btn.addEventListener('click', fetchQuote);
+
+    // Optional: fetch on load for immediate content
+    // fetchQuote();
+  </script>
+</body>
+</html>
